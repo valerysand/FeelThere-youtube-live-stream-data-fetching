@@ -1,4 +1,4 @@
-import { IYoutubeStreamModel, YoutubeStreamModel } from '../model/stream.model';
+import { IYoutubeStreamModel, YoutubeStreamModel } from '../model/youtube-stream.model';
 import { google, youtube_v3, Auth } from 'googleapis';
 import { authorize } from './auth-google-logic';
 
@@ -31,15 +31,6 @@ export async function getDataYoutube(): Promise<void> {
     });
     // my statistics from the live stream (likes, dislikes, views, comments, etc)
     const statistics = responseData.data.items[0].statistics;
-    // get live chat messages
-    const responseChatMessages = await youtube.liveChatMessages.list({
-        part: ['snippet', 'authorDetails'],
-        liveChatId: liveStream.snippet.liveChatId,
-    });
-    // my live chat messages
-    const chatMessages = responseChatMessages.data.items;
-    console.log(chatMessages.map((message) => message.snippet.displayMessage));
-
     // Save data in mongoDB
     const stream: IYoutubeStreamModel = new YoutubeStreamModel({
         streamId: liveStream.id,
@@ -49,7 +40,6 @@ export async function getDataYoutube(): Promise<void> {
         dislikes: statistics.dislikeCount,
         views: statistics.viewCount,
         comments: statistics.commentCount,
-        chatMessages: chatMessages,
     });
     stream.save();
     console.log('Data saved in mongoDB');

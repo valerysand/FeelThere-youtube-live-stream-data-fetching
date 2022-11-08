@@ -8,7 +8,6 @@ export interface IYoutubeStreamModel extends Document {
     dislikes: number;
     views: number;
     comments: number;
-    chatMessages: any;
 }
 
 const StreamSchema = new Schema<IYoutubeStreamModel>({
@@ -41,10 +40,6 @@ const StreamSchema = new Schema<IYoutubeStreamModel>({
         type: Number,
         required: true
     },
-    chatMessages: {
-        type: Array,
-        required: true
-    }
 }, {
     versionKey: false,
     timestamps: true,
