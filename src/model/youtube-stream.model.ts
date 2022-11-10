@@ -10,7 +10,7 @@ export interface IYoutubeStreamModel extends Document {
     comments: number;
 }
 
-const StreamSchema = new Schema<IYoutubeStreamModel>({
+const YoutubeStreamSchema = new Schema<IYoutubeStreamModel>({
     streamId: {
         type: String,
         required: true,
@@ -46,4 +46,4 @@ const StreamSchema = new Schema<IYoutubeStreamModel>({
 
 });
 
-export const YoutubeStreamModel = model<IYoutubeStreamModel>('YoutubeStreamModel', StreamSchema, 'youtube-streams');
+export const YoutubeStreamModel = model<IYoutubeStreamModel>('YoutubeStreamModel', YoutubeStreamSchema, 'youtube-streams');

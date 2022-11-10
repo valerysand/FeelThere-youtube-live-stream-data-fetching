@@ -43,7 +43,7 @@ export async function authorize(scopes: string[]): Promise<Auth.OAuth2Client> {
         const token = await auth.getToken(code);
         // set the token
         auth.setCredentials(token.tokens);
-        // store the token
+        // store the token 
         fs.writeFileSync('token.json', JSON.stringify(token.tokens));
         return auth;
     }
