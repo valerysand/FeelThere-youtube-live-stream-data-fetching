@@ -1,5 +1,5 @@
 import axios from "axios";
-import { FacebookStreamModel, IFacebookStreamModel } from "../model/facebook-stream.model";
+import { FacebookStreamModel, IFacebookStreamModel } from "../model/stream-models/facebook-stream.model";
 import { getAcсessToken } from "./auth-facebook.logic";
 
 // Get my user Data

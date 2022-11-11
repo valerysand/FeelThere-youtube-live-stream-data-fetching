@@ -1,4 +1,4 @@
-import { IYoutubeStreamModel, YoutubeStreamModel } from '../model/youtube-stream.model';
+import { IYoutubeStreamModel, YoutubeStreamModel } from '../model/stream-models/youtube-stream.model';
 import { google, youtube_v3, Auth } from 'googleapis';
 import { authorize } from './auth-google-logic';
 
