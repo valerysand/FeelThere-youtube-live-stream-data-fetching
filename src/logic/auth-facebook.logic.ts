@@ -3,13 +3,8 @@ import url from 'url';
 import open from 'open';
 import destroyer from 'server-destroy';
 import axios from 'axios';
-import fs from 'fs';
+import { IFbAccessTokenModel, FbAccessTokenModel } from '../model/fb-acces-token.model';
 
-// Authorize facebook 
-async function authorizeFacebook(): Promise<any> {
-    const token = await getToken();
-    return token;
-}
 
 // Genereate a url that asks permissions for Youtube scopes
 const authUrl: string = `https://www.facebook.com/v15.0/dialog/oauth?client_id=${process.env.FACEBOOK_CLIENT_ID}&redirect_uri=http://localhost:3000/oauth2callback&scope=email&response_type=code&auth_type=rerequest`;
@@ -34,41 +29,54 @@ async function getAuthorizationFacebookCode(): Promise<string> {
 
 }
 
-// Get the token 
-export async function getToken(): Promise<string> {
-    // if token valide return token
+// Get the access token 
+export async function getAcсessToken(): Promise<string> {
+    // Check stored token to expire
     const isValid = await checkTokenExpiration();
     if (isValid === true) {
-        const token = fs.readFileSync('.env', 'utf8');
+        const token = await getStoredToken();
         return token;
     } else {
         // get the code from the url
         const code = await getAuthorizationFacebookCode();
         // get the token
-        const response = await axios.get(
+        const access_token = await axios.get(
             `https://graph.facebook.com/v15.0/oauth/access_token?client_id=${process.env.FACEBOOK_CLIENT_ID}&redirect_uri=http://localhost:3000/oauth2callback&client_secret=${process.env.FACEBOOK_CLIENT_SECRET}&code=${code}`
         );
-        // Replace token in file .env
-        const env = fs.readFileSync('.env', 'utf8');
-        const newEnv = env.replace(/FACEBOOK_ACCESS_TOKEN=.*/, `FACEBOOK_ACCESS_TOKEN=${response.data.access_token}`);
-        fs.writeFileSync('.env', newEnv);
-        return response.data.access_token;
+        // Save access token to mongoDB
+        const saveToken: IFbAccessTokenModel = new FbAccessTokenModel({
+            accessToken: access_token.data.access_token,
+            expiresIn: access_token.data.expires_in,
+        });
+        // Replace the old token with the new one
+        await FbAccessTokenModel.deleteMany({});
+        // Save the new token
+        await saveToken.save();
+        return access_token.data.access_token;
     }
 
     // Check if token is valid
     async function checkTokenExpiration(): Promise<boolean> {
-        const token = process.env.FACEBOOK_ACCESS_TOKEN;
-        if (token) {
+        try {
+            const token = await getStoredToken();
             const response = await axios.get(
                 `https://graph.facebook.com/debug_token?input_token=${token}&access_token=${token}`
             );
             return response.data.data.is_valid;
-        } else {
+        }
+        catch (err: any) {
             return false;
         }
     }
 }
 
-async function facebookAuth() {
-    
+// Get the token from mongoDB
+async function getStoredToken(): Promise<string> {
+    const token = await FbAccessTokenModel.findOne({});
+    if (token) {
+        return token.accessToken;
+    } else {
+        return '';
+    }
 }
+

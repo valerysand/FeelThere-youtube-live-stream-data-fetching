@@ -2,20 +2,17 @@ import { IYoutubeStreamModel, YoutubeStreamModel } from '../model/youtube-stream
 import { google, youtube_v3, Auth } from 'googleapis';
 import { authorize } from './auth-google-logic';
 
-// Scopes for youtube
-const scopes: string[] = [
-    "https://www.googleapis.com/auth/youtube.readonly",
-];
 
 // get data from my live stream, and coments, likes, dislikes, views, etc
 export async function getDataYoutube(): Promise<void> {
-    const auth: Auth.OAuth2Client = await authorize(scopes);
+    const auth: Auth.OAuth2Client = await authorize();
 
     // get the auth client
     const youtube: youtube_v3.Youtube = google.youtube({
         version: 'v3',
         auth: auth,
     });
+
     // get all my live streams
     const responseStreams = await youtube.liveBroadcasts.list({
         part: ['snippet', 'status'],
@@ -42,5 +39,5 @@ export async function getDataYoutube(): Promise<void> {
         comments: statistics.commentCount,
     });
     stream.save();
-    console.log('Data saved in mongoDB');
+    console.log('Youtube live stream data saved in mongoDB');
 }
