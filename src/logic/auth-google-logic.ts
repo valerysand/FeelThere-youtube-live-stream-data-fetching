@@ -2,7 +2,7 @@ import { Auth, google } from 'googleapis';
 import http from 'http';
 import url from 'url';
 import opn from 'open';
-import fs from 'fs';
+import { IGooogleTokenModel, GoogleTokenModel } from '../model/token-models/google-token.model';
 
 // Create the OAuth2 client with the credentials
 const auth: Auth.OAuth2Client = new google.auth.OAuth2({
@@ -41,17 +41,37 @@ async function getAuthorizationCode(): Promise<string> {
     });
 }
 
-// Get the token
-export async function authorize(): Promise<Auth.OAuth2Client> {
-    // Check if stored token is valid
-    const storedToken = await getStoredToken();
-    if (storedToken) {
-        auth.setCredentials({
-            access_token: storedToken.access_token,
-            refresh_token: storedToken.refresh_token,
-        });
-        return auth;
 
+// export async function authorize(): Promise<Auth.OAuth2Client> {
+//     try {
+//         const token = await getStoredToken();
+//         if (token) {
+//             auth.setCredentials(token);
+//             return auth;
+//         } else {
+//             const code = await getAuthorizationCode();
+//             const { tokens } = await auth.getToken(code);
+//             auth.setCredentials(tokens);
+//             const newToken = new GoogleTokenModel({
+//                 name: 'Google - access token',
+//                 accessToken: tokens.access_token,
+//                 refreshToken: tokens.refresh_token,
+//             });
+//             await newToken.save();
+//             return auth;
+//         }
+//     } catch (error) {
+//         throw error;
+//     }
+// }
+
+// // Get the token
+export async function authorize(): Promise<Auth.OAuth2Client> {
+    // Check if we have previously stored a token.
+    const token = await getStoredToken();
+    if (token) {
+        auth.setCredentials(token);
+        return auth;
     } else {
         // get the code from the url
         const code = await getAuthorizationCode();
@@ -59,19 +79,35 @@ export async function authorize(): Promise<Auth.OAuth2Client> {
         const token = await auth.getToken(code);
         // set the token
         auth.setCredentials(token.tokens);
-        // store token in .env file
-        fs.writeFileSync('token.json', JSON.stringify(token.tokens));
+        // // store the token in mongoDB
+        const tokenToStore: IGooogleTokenModel = new GoogleTokenModel({
+            name: 'Google - access token',
+            accessToken: token.tokens.access_token?.toString(),
+            refreshToken: token.tokens.refresh_token?.toString(),
+        });
+        // // Remove old token
+        await GoogleTokenModel.deleteOne({ name: 'Google - access token' });
+        // // save the token in mongoDB
+        tokenToStore.save();
         return auth;
+
     }
+
 }
 
 // Get stored token
 async function getStoredToken(): Promise<Auth.Credentials | null> {
     try {
-        const token = fs.readFileSync('token.json', 'utf8');
-        return JSON.parse(token);
+        const token = await GoogleTokenModel.findOne({ name: 'Google - access token' });
+        if (token) {
+            return {
+                access_token: token.accessToken,
+                refresh_token: token.refreshToken,
+            };
+        } else {
+            return null;
+        }
     } catch (error) {
         return null;
     }
 }
-

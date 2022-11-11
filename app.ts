@@ -13,7 +13,7 @@ async function main() {
     await getDataYoutube();
 
     // get data from facebook
-    await getMyLiveVideos();
+    // await getMyLiveVideos();
 
 }
 
