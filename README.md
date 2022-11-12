@@ -1,5 +1,7 @@
 Author: Valery Sandler
+
 Date: 2018-05-01
+
 Version: 1.0
 
 # - This script is used to fetch data from Youtube and Facebook live streams.
