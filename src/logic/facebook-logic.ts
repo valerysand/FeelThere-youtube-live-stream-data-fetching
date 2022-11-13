@@ -14,6 +14,7 @@ export async function getMyLiveVideos(): Promise<any> {
         // 
         const liveStream = response.data.live_videos.data[0];
         // Check if the stream is live
+        console.log(liveStream.reactions.data);
         if (liveStream) {
             // Check if the stream is already in the database
             const isStreamInDB = await FacebookStreamModel.findOne({ streamId: liveStream.id });
@@ -23,7 +24,7 @@ export async function getMyLiveVideos(): Promise<any> {
                     streamId: liveStream.id,
                     title: liveStream.title,
                     description: liveStream.description,
-                    reactions: liveStream.reactions.saveStream.length,
+                    reactions: liveStream.reactions?.data.map((reaction: any) => reaction.type),
                     views: liveStream.live_views,
                     comments: liveStream.comments.data.map((comment: any) => comment.message),
                 });
@@ -38,7 +39,7 @@ export async function getMyLiveVideos(): Promise<any> {
                     $set: {
                         title: liveStream.title,
                         description: liveStream.description,
-                        reactions: liveStream.reactions.saveStream.length,
+                        reactions: liveStream.reactions?.data.map((reaction: any) => reaction.type),
                         views: liveStream.live_views,
                         comments: liveStream.comments.data.map((comment: any) => comment.message),
                     }

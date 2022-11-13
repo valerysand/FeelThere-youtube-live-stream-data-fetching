@@ -3,6 +3,7 @@ dotenv.config();
 import mongo from "./dal/mongo";
 import { getDataYoutube } from "./logic/youtube-logic";
 import { getMyLiveVideos } from './logic/facebook-logic';
+import { isTokenExpired } from './logic/auth-google-logic';
 
 
 // Main function
@@ -13,7 +14,7 @@ async function main() {
     await getDataYoutube();
 
     // get data from facebook
-    // await getMyLiveVideos();
+    await getMyLiveVideos();
 
 }
 

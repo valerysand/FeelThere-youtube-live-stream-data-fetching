@@ -4,6 +4,7 @@ export interface IGooogleTokenModel extends Document {
     name: string;
     accessToken: string;
     refreshToken: string;
+    expiryDate: Date;
 }
 
 const GoogleTokenSchema = new Schema<IGooogleTokenModel>({
@@ -19,6 +20,11 @@ const GoogleTokenSchema = new Schema<IGooogleTokenModel>({
         type: String,
         required: true,
     },
+    expiryDate: {
+        type: Date,
+        required: true,
+    },
+
 }, {
     timestamps: true,
     versionKey: false,

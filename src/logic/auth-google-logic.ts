@@ -48,9 +48,27 @@ export async function authorize(): Promise<Auth.OAuth2Client> {
     const token = await getStoredToken();
     // If we have a token, set the credentials
     if (token) {
-        auth.setCredentials(token);
-        return auth;
+        // Check if token is valid
+        const isExpired = isTokenExpired();
+        if (!isExpired) {
+            auth.setCredentials(token);
+            return auth;
+        } else {
+            // If token is expired, refresh it
+            const newToken = await auth.refreshAccessToken();
+            console.log('Google token refreshed: ', newToken);
+            // Save the new token to mongoDB
+            await GoogleTokenModel.updateOne({ name: 'Google - access token' }, {
+                $set: {
+                    token: newToken.credentials.refresh_token,
+                }
+            });
+            // Set the credentials
+            auth.setCredentials(newToken.credentials);
+            return auth;
+        }
     } else {
+        // If we don't have a token, get one
         // get the code from the url
         const code = await getAuthorizationCode();
         // get the token
@@ -62,6 +80,7 @@ export async function authorize(): Promise<Auth.OAuth2Client> {
             name: 'Google - access token',
             accessToken: token.tokens.access_token?.toString(),
             refreshToken: token.tokens.refresh_token?.toString(),
+            expiryDate: token.tokens.expiry_date ? new Date(token.tokens.expiry_date) : new Date(),
         });
         // // Remove old token
         await GoogleTokenModel.deleteOne({ name: 'Google - access token' });
@@ -69,9 +88,7 @@ export async function authorize(): Promise<Auth.OAuth2Client> {
         tokenToStore.save();
         // return the auth
         return auth;
-
     }
-
 }
 
 // Get stored token
@@ -90,5 +107,16 @@ async function getStoredToken(): Promise<Auth.Credentials | null> {
         }
     } catch (error) {
         return null;
+    }
+}
+
+// Check if token is expired
+export function isTokenExpired(): boolean {
+    const expiryDate = auth.credentials.expiry_date;
+    const currentDate = new Date().getTime();
+    if (expiryDate < currentDate) {
+        return true;
+    } else {
+        return false;
     }
 }

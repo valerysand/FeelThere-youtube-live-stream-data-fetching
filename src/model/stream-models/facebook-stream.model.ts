@@ -4,7 +4,7 @@ export interface IFacebookStreamModel extends Document {
     streamId: string;
     title: string;
     description: string;
-    reactions: number;
+    reactions: string[];
     views: number;
     comments: string[];
 }
@@ -22,7 +22,7 @@ const FacebookStreamSchema = new Schema<IFacebookStreamModel>({
         type: String,
     },
     reactions: {
-        type: Number,
+        type: [String],
     },
     views: {
         type: Number,
